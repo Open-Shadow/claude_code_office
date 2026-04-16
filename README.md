@@ -1,58 +1,62 @@
 # Claude Code Office
 
-A standalone Electron desktop app that turns your Claude Code sessions into an animated pixel art office. Each session becomes a character you can watch, interact with, and manage — all from one window.
+[English](README_EN.md) | 中文
 
-Built on top of [Pixel Agents](https://github.com/pablodelucca/pixel-agents) by pablodelucca.
+一个独立的 Electron 桌面应用，将你的 Claude Code 会话变成像素风动画办公室。每个会话化身为一个可观察、可交互、可管理的像素小人——所有操作集中在一个窗口完成。
 
-## Features
+基于 [Pixel Agents](https://github.com/pablodelucca/pixel-agents)（pablodelucca）二次开发。
 
-### Session Management
+![screenshot](imgs/screenshot.png)
 
-Claude Code Office is a full-featured session manager for Claude Code. You can create new sessions, resume previous ones, or continue the last conversation, all from the pixel art office interface.
+## 功能特性
 
-The "+ Agent" button in the bottom toolbar opens a dropdown with several options. "New session" spawns a fresh Claude Code instance in a chosen working directory. "Resume session" opens Claude's interactive session picker so you can jump back into any previous conversation. "Continue last conversation" reconnects to the most recent session in the selected directory. There is also a "Skip permissions mode" toggle that launches sessions with `--dangerously-skip-permissions`.
+### 会话管理
 
-When the app closes, all running sessions are gracefully interrupted (Ctrl+C) and their metadata is persisted to disk. On the next launch, every agent character reappears in the office at their saved position, complete with their original palette and seat assignment. Double-clicking a persisted agent reconnects to its session via `claude --resume` in the original working directory. Agents remain in the office until explicitly removed.
+Claude Code Office 是一个功能完整的 Claude Code 会话管理器。你可以新建会话、恢复历史会话、继续上次对话，一切操作都在像素办公室界面中完成。
 
-Project names are automatically extracted from the working directory path — the last folder segment becomes the character's label (e.g., `F:/Projects/my-app` becomes "my-app").
+底部工具栏的"+ 智能体"按钮打开一个下拉菜单，提供多种选项。"新建会话"在选定的工作目录中启动一个全新的 Claude Code 实例。"恢复某次会话"打开 Claude 的交互式会话选择器，让你跳转到任意一次历史对话。"继续上次对话"重连到选定目录中最近一次的会话。还有一个"跳过权限模式"开关，以 `--dangerously-skip-permissions` 模式启动会话。
 
-### Interactive Terminal
+应用关闭时，所有正在运行的会话会被优雅中断（Ctrl+C），元数据持久化到磁盘。下次启动时，每个智能体角色会在办公室中重现，保留原有的皮肤配色和座位分配。双击一个已保存的智能体，会通过 `claude --resume` 在原始工作目录中重新连接其会话。除非手动删除，智能体会始终保留在办公室中。
 
-Double-clicking any character opens a pixel-styled floating terminal dialog. The dialog wraps a real `node-pty` process running Claude Code, so all CLI features work unchanged — tool approval prompts, streaming output, MCP integrations, hooks, skills, everything.
+项目名称从工作目录路径自动提取——路径的最后一级文件夹名即为角色标签（例如 `F:/Projects/my-app` 显示为 "my-app"）。
 
-The terminal dialog supports dragging (via the title bar), resizing (bottom-right corner handle), and mouse wheel scrollback for reviewing conversation history. A status indicator dot in the title bar shows whether the session is active (green), waiting for input (yellow), or idle (gray). When the underlying session exits, the dialog auto-closes.
+### 交互式终端
 
-### Pixel Art Office
+双击任意角色打开一个像素风浮动终端对话框。对话框内封装了一个真实的 `node-pty` 进程运行 Claude Code，因此 CLI 的所有功能完整保留——工具审批提示、流式输出、MCP 集成、Hooks、Skills，一切照旧。
 
-The office is rendered on a Canvas 2D engine with BFS pathfinding, z-sorted sprites, and per-character state machines. Each Claude Code session gets its own animated character that reacts in real time — typing when writing code, reading when searching files, wandering when idle. Characters have diverse palettes (6 base skins with hue-shift variations), and their electronics (monitors, PCs) auto-switch to "ON" state when they sit at a desk to work.
+终端对话框支持拖拽移动（通过标题栏）、拖拽调整大小（右下角把手）、鼠标滚轮回滚查看历史对话。标题栏中的状态指示点显示会话当前状态：运行中（绿色）、等待输入（黄色）、空闲（灰色）。当底层会话退出时，对话框自动关闭。
 
-Plants in the office have a subtle breathing animation — a gentle scale oscillation anchored at the base, so the pot stays fixed while the foliage sways. Each plant instance has a unique phase offset to avoid synchronized movement.
+### 像素办公室
 
-Sub-agents spawned via the Task or Agent tool appear as temporary characters linked to their parent. Team agents with inline teammates also get their own characters. Speech bubbles indicate when an agent needs permission approval or has finished its turn.
+办公室基于 Canvas 2D 引擎渲染，内置 BFS 寻路、Z 轴排序精灵和角色状态机。每个 Claude Code 会话拥有自己的动画角色，实时反映当前行为——编写代码时打字、搜索文件时阅读、空闲时四处闲逛。角色有多样化的配色方案（6 种基础皮肤 + 色相偏移变体），角色就座办公时电子设备（显示器、电脑）自动切换为开启状态。
 
-### Office Layout Editor
+办公室中的植物有微妙的呼吸动画——以花盆底部为锚点进行轻微的缩放摆动，花盆保持不动而叶片轻轻摇曳。每株植物有独立的相位偏移，避免同步晃动。
 
-The built-in layout editor lets you customize the office. Toggle it with the "Layout" button and use the toolbar to paint floors, place walls, add furniture, and erase tiles. The editor supports undo/redo (50 levels), furniture rotation and state toggling, drag-to-move, floor and wall colorization with HSB sliders, and grid expansion up to 64x64 tiles by clicking the ghost border.
+通过 Task 或 Agent 工具产生的子智能体会作为临时角色出现，与其父级关联。团队内联成员也会获得各自的角色。气泡提示会标示智能体何时需要权限审批或已完成其回合。
 
-Layouts are persisted to `data/layout.json` in the application directory. You can export and import layouts as JSON files from the Settings modal. The default layout ships with a main office area and a dedicated Monitor room.
+### 办公室布局编辑器
 
-### Monitor Room and Session Monitor
+内置的布局编辑器让你自由定制办公室。点击"布局"按钮切换编辑模式，使用工具栏涂刷地板、放置墙壁、添加家具和擦除方块。编辑器支持撤销/重做（50 级）、家具旋转与状态切换、拖拽移动、地板和墙壁的 HSB 色彩调节，以及点击幽灵边框将网格扩展至最大 64×64 格。
 
-A dedicated Monitor room sits to the right of the main office, separated by walls with a connecting doorway. Inside lives a special Monitor NPC — a virtual character that isn't tied to any real Claude session. The Monitor NPC autonomously cycles through behaviors every 15-30 seconds: working at its desk, walking to the bookshelf to read, or wandering around the room. This gives the office a lived-in feel.
+布局保存在应用目录的 `data/layout.json` 中。你可以通过设置弹窗导出和导入 JSON 格式的布局文件。默认布局包含主办公区和一个独立的监控室。
 
-The whiteboard in the Monitor room doubles as a bulletin board — clicking it opens the Session Monitor panel. The Monitor panel can also be toggled via the "Monitor" button in the bottom toolbar. It displays a summary for each active session: project name, a one-line description of what the session is doing, last active timestamp, and a status dot (green < 30s, yellow < 2min, gray otherwise).
+### 监控室与会话监控
 
-Summaries are generated by calling the Claude API (claude-3-5-haiku) with excerpts from each session's JSONL log. The API prompt includes the current UI language, so summaries are generated in the user's chosen language. Authentication is handled automatically by reading from `ANTHROPIC_API_KEY` environment variable or `~/.claude/.credentials`.
+主办公室右侧有一间独立的监控室，以墙壁分隔并通过门洞连通。室内有一个特殊的监控 NPC——一个不绑定任何真实 Claude 会话的虚拟角色。监控 NPC 每 15-30 秒自动切换行为：在桌前工作、走到书架前阅读、或在房间内随意走动，让办公室充满生活气息。
 
-### Plugin System
+监控室内的白板同时充当公告栏——点击它可以打开会话监控面板。监控面板也可以通过底部工具栏的"监控"按钮切换。面板显示每个活跃会话的摘要信息：项目名称、一句话描述当前正在做什么、最后活跃时间戳和状态指示点（绿色 < 30 秒、黄色 < 2 分钟、灰色为更早）。
 
-Plugins extend the office with custom interactive furniture. Each plugin lives in a subfolder under `plugins/` (next to the executable) and contains a `manifest.json`, a sprite PNG, and an HTML panel file.
+摘要通过调用 Claude API（claude-3-5-haiku）从每个会话的 JSONL 日志中提取内容生成。API 的提示词包含当前 UI 语言，因此摘要会以用户选择的语言生成。认证通过 `ANTHROPIC_API_KEY` 环境变量或 `~/.claude/.credentials` 自动读取。
 
-When a plugin's furniture is placed in the office and clicked, a new window opens showing the plugin's panel UI. Panels run in sandboxed BrowserWindows with `contextIsolation: true` and no `nodeIntegration`, so they cannot access the main process or filesystem directly. Plugin panel paths are validated against directory traversal attacks.
+### 插件系统
 
-An example todo-board plugin is included at `plugins/example-todo/`. It provides a pixel-styled sticky note that can be placed on a wall; clicking it opens a simple todo list with local storage persistence.
+插件通过自定义交互式家具来扩展办公室。每个插件位于 `plugins/` 目录下的一个子文件夹中（与可执行文件同级），包含 `manifest.json`、精灵图 PNG 和 HTML 面板文件。
 
-Plugin manifest format:
+当插件家具被放置在办公室中并被点击时，会打开一个新窗口显示插件面板 UI。面板运行在沙箱化的 BrowserWindow 中（`contextIsolation: true`，无 `nodeIntegration`），不能直接访问主进程或文件系统。插件面板路径经过目录穿越攻击校验。
+
+项目自带一个示例插件 `plugins/example-todo/`，提供一个像素风便签贴纸，可放置在墙上，点击后打开一个支持 localStorage 持久化的待办事项列表。
+
+插件 manifest 格式：
 
 ```json
 {
@@ -71,38 +75,38 @@ Plugin manifest format:
 }
 ```
 
-### Internationalization (i18n)
+### 国际化（i18n）
 
-The entire UI supports three languages: English, Chinese (中文), and Japanese (日本語). Language can be switched at any time from the Settings modal. The selection persists across restarts. All UI text — buttons, labels, tooltips, editor tools, help text, error dialogs, and changelog modals — is translated. Monitor summaries are also generated in the selected language via the Claude API prompt.
+整个 UI 支持三种语言：English、中文、日本語。可以在设置弹窗中随时切换语言，选择在重启后保持不变。所有 UI 文本——按钮、标签、工具提示、编辑器工具、帮助文本、错误对话框和更新日志弹窗——均已翻译。监控摘要也会通过 Claude API 以用户选择的语言生成。
 
-The i18n system is built on `react-i18next` + `i18next` with namespace support, making it straightforward to add new languages or split translations by module as the project grows.
+i18n 系统基于 `react-i18next` + `i18next` 构建，支持命名空间拆分，便于后续新增语言或按模块分割翻译文件。
 
-### Camera Controls
+### 视角控制
 
-The office view supports panning via middle-mouse-button drag, zooming via Ctrl+scroll wheel, and horizontal panning via Shift+scroll wheel. A reset button (home icon) in the zoom controls returns the view to the default position and zoom level. The camera automatically follows a selected character and can be manually panned to break the follow.
+办公室视图支持鼠标中键拖拽平移、Ctrl+滚轮缩放、Shift+滚轮水平平移。缩放控件中的复位按钮（房屋图标）将视图恢复到默认位置和缩放级别。摄像机会自动跟随选中的角色，手动平移可打断跟随。
 
-### Help
+### 帮助
 
-A "?" button in the bottom toolbar opens a pixel-styled help modal with two sections: a feature overview and a keyboard shortcuts reference. The help content is fully translated.
+底部工具栏的"?"按钮打开一个像素风帮助弹窗，包含功能概览和快捷键参考两部分。帮助内容支持完整的多语言翻译。
 
-## Requirements
+## 环境要求
 
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and on PATH
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) 已安装并在 PATH 中
 - Node.js 18+
-- Windows (primary target; macOS/Linux untested)
+- Windows（主要目标平台；macOS/Linux 未测试）
 
-## Getting Started
+## 快速开始
 
 ```bash
-git clone https://github.com/your-username/claude-code-office.git
-cd claude-code-office
+git clone https://github.com/Open-Shadow/claude_code_office.git
+cd claude_code_office
 npm install
 cd renderer && npm install && cd ..
 npm run build
 npm start
 ```
 
-Or install globally:
+或全局安装：
 
 ```bash
 npm install -g .
@@ -110,61 +114,61 @@ claude-office
 claude-office --dir F:/Projects/my-app
 ```
 
-The `--dir` flag auto-creates a session in the specified directory on startup.
+`--dir` 参数在启动时自动在指定目录创建一个会话。
 
-## Data Storage
+## 数据存储
 
-All configuration and runtime data is stored in the `data/` directory next to the executable (or project root in development):
+所有配置和运行时数据存储在可执行文件旁的 `data/` 目录中（开发模式下为项目根目录）：
 
-- `data/layout.json` — office layout (grid, furniture, tile colors)
-- `data/settings.json` — user preferences (sound, language, hooks, etc.)
-- `data/agents.json` — agent seat assignments and palette data
-- `data/persisted-agents.json` — session metadata for cross-restart persistence
+- `data/layout.json` — 办公室布局（网格、家具、地砖颜色）
+- `data/settings.json` — 用户偏好（声音、语言、Hooks 等）
+- `data/agents.json` — 智能体座位分配和配色数据
+- `data/persisted-agents.json` — 跨重启的会话元数据
 
-Claude CLI's own files (`~/.claude/`) are read but never written to.
+Claude CLI 自身的文件（`~/.claude/`）仅读取不写入。
 
-## Tech Stack
+## 技术栈
 
-- **Main process**: TypeScript, Electron, node-pty, pngjs
-- **Renderer**: React 19, TypeScript, Vite, Canvas 2D, Tailwind CSS v4, xterm.js
-- **Session detection**: JSONL file watching + Claude Code Hooks API
-- **Monitor**: @anthropic-ai/sdk (claude-3-5-haiku)
-- **i18n**: react-i18next + i18next
+- **主进程**：TypeScript, Electron, node-pty, pngjs
+- **渲染进程**：React 19, TypeScript, Vite, Canvas 2D, Tailwind CSS v4, xterm.js
+- **会话检测**：JSONL 文件监听 + Claude Code Hooks API
+- **监控**：@anthropic-ai/sdk（claude-3-5-haiku）
+- **国际化**：react-i18next + i18next
 
-## Project Structure
+## 项目结构
 
 ```
 claude_code_office/
-├── electron/          # Main process
-│   ├── main.ts        # App entry, IPC handlers, asset/layout loading
-│   ├── preload.ts     # Context bridge, IPC channel whitelist
-│   ├── sessionManager.ts  # node-pty session lifecycle
-│   ├── monitorAgent.ts    # Log reading + Claude API summaries
-│   ├── pluginLoader.ts    # Plugin discovery and loading
-│   └── assetLoader.ts     # PNG sprite parsing
-├── renderer/          # React renderer
+├── electron/              # 主进程
+│   ├── main.ts            # 应用入口，IPC 处理，资源/布局加载
+│   ├── preload.ts         # 上下文桥接，IPC 通道白名单
+│   ├── sessionManager.ts  # node-pty 会话生命周期
+│   ├── monitorAgent.ts    # 日志读取 + Claude API 摘要
+│   ├── pluginLoader.ts    # 插件发现与加载
+│   └── assetLoader.ts     # PNG 精灵图解析
+├── renderer/              # React 渲染进程
 │   ├── src/
-│   │   ├── office/    # Canvas engine, characters, rendering, layout
-│   │   ├── terminal/  # xterm.js dialog and manager
-│   │   ├── monitor/   # Session monitor panel
-│   │   ├── i18n/      # Internationalization (en, zh, ja)
-│   │   ├── hooks/     # React hooks (messages, editor)
-│   │   └── components/  # UI components (toolbar, settings, help)
+│   │   ├── office/        # Canvas 引擎，角色，渲染，布局
+│   │   ├── terminal/      # xterm.js 终端对话框和管理器
+│   │   ├── monitor/       # 会话监控面板
+│   │   ├── i18n/          # 国际化（en, zh, ja）
+│   │   ├── hooks/         # React Hooks（消息，编辑器）
+│   │   └── components/    # UI 组件（工具栏，设置，帮助）
 │   └── package.json
-├── plugins/           # Built-in plugins
-│   └── example-todo/  # Example: pixel art todo board
-├── assets/            # Sprites, furniture catalog, floor/wall tiles
-├── data/              # Runtime data (layout, settings, sessions)
-├── server/            # Hook receiver server (from pixel-agents)
-├── shared/            # Shared types and utilities
-└── bin/               # CLI entry point (claude-office)
+├── plugins/               # 内置插件
+│   └── example-todo/      # 示例：像素风待办事项板
+├── assets/                # 精灵图，家具目录，地板/墙壁图块
+├── data/                  # 运行时数据（布局，设置，会话）
+├── server/                # Hook 接收服务器（来自 pixel-agents）
+├── shared/                # 共享类型和工具
+└── bin/                   # CLI 入口（claude-office）
 ```
 
-## Credits
+## 致谢
 
-- Pixel art office engine and character sprites: [Pixel Agents](https://github.com/pablodelucca/pixel-agents) by pablodelucca (MIT)
-- Character sprites based on [Metro City](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack) by JIK-A-4
+- 像素办公室引擎和角色精灵图：[Pixel Agents](https://github.com/pablodelucca/pixel-agents)，pablodelucca 作品（MIT）
+- 角色精灵图基于 [Metro City](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack)，JIK-A-4 作品
 
-## License
+## 许可证
 
 MIT
