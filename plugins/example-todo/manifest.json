@@ -1,0 +1,14 @@
+{
+  "id": "todo-board",
+  "name": "Today's Todo",
+  "version": "1.0.0",
+  "furniture": {
+    "id": "PLUGIN_TODO_BOARD",
+    "sprite": "sprite.png",
+    "footprint": [[1, 2]],
+    "category": "wall",
+    "canPlaceOnWalls": true
+  },
+  "panel": "panel.html",
+  "panelSize": { "width": 400, "height": 500 }
+}

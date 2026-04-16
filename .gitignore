@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+renderer/node_modules/
+server/node_modules/
+
+# Build output
+dist/
+release/
+
+# Runtime data (user-specific)
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# TypeScript
+*.tsbuildinfo
+*.js.map
+
+# Electron
+*.asar
+
+# Logs
+*.log
+npm-debug.log*
+
+# Lock files (keep package-lock.json, ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Claude Code internal
+.claude/
+
+# Reference project (remove before shipping)
+pixel-agents/

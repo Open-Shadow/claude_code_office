@@ -1,0 +1,127 @@
+{
+  "toolbar": {
+    "addAgent": "+ Agent",
+    "layout": "Layout",
+    "settings": "Settings",
+    "monitor": "Monitor",
+    "help": "?",
+    "dropdown": {
+      "skipPermissions": "Skip permissions mode",
+      "skipPermissionsWarning": "Bypasses all tool approval prompts",
+      "newSession": "New session",
+      "resumeSession": "Resume session",
+      "continueSession": "Continue last conversation"
+    }
+  },
+  "editor": {
+    "furniture": "Furniture",
+    "floor": "Floor",
+    "wall": "Wall",
+    "erase": "Erase",
+    "desks": "Desks",
+    "chairs": "Chairs",
+    "storage": "Storage",
+    "tech": "Tech",
+    "decor": "Decor",
+    "wallCategory": "Wall",
+    "misc": "Misc",
+    "pick": "Pick",
+    "select": "Select"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "openSessionsFolder": "Open Sessions Folder",
+    "exportLayout": "Export Layout",
+    "importLayout": "Import Layout",
+    "addAssetDirectory": "Add Asset Directory",
+    "sound": "Sound Notifications",
+    "watchAllSessions": "Watch All Sessions",
+    "instantDetection": "Instant Detection (Hooks)",
+    "alwaysShowLabels": "Always Show Labels",
+    "debugView": "Debug View"
+  },
+  "monitor": {
+    "title": "Session Monitor",
+    "noSessions": "No active sessions",
+    "justNow": "just now",
+    "secondsAgo": "{{count}}s ago",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago"
+  },
+  "terminal": {
+    "close": "X"
+  },
+  "zoom": {
+    "zoomIn": "Zoom in (Ctrl+Scroll)",
+    "zoomOut": "Zoom out (Ctrl+Scroll)",
+    "reset": "Reset view"
+  },
+  "help": {
+    "title": "Help",
+    "features": "Features",
+    "shortcuts": "Shortcuts",
+    "doubleClickAgent": "Double-click a character to open its terminal",
+    "clickAgent": "Click a character to select, click a seat to reassign",
+    "middleDrag": "Middle-click drag to pan the view",
+    "shiftScroll": "Shift + scroll to pan horizontally",
+    "ctrlScroll": "Ctrl + scroll to zoom",
+    "clickBulletin": "Click the bulletin board to open Monitor",
+    "addAgent": "Use '+ Agent' to create a new session",
+    "layoutEditor": "Use 'Layout' button to edit the office",
+    "editRotate": "R \u2014 Rotate furniture",
+    "editToggle": "T \u2014 Toggle furniture state",
+    "editUndo": "Ctrl+Z \u2014 Undo",
+    "editRedo": "Ctrl+Y \u2014 Redo",
+    "editEsc": "Esc \u2014 Exit editor"
+  },
+  "editActions": {
+    "undo": "Undo",
+    "undoTitle": "Undo (Ctrl+Z)",
+    "redo": "Redo",
+    "redoTitle": "Redo (Ctrl+Y)",
+    "save": "Save",
+    "saveTitle": "Save layout",
+    "reset": "Reset",
+    "resetTitle": "Reset to last saved layout",
+    "resetConfirm": "Reset?",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "migration": {
+    "title": "We owe you an apology!",
+    "message": "We've just migrated to fully open-source assets, lovingly built from scratch.",
+    "resetNotice": "Unfortunately, this means your previous layout had to be reset.",
+    "stayTuned": "Stay tuned, and thanks for using Claude Code Office!",
+    "gotIt": "Got it"
+  },
+  "version": {
+    "updated": "Updated to v{{version}}!",
+    "whatsNew": "See what's new"
+  },
+  "overlay": {
+    "needsApproval": "Needs approval",
+    "idle": "Idle",
+    "subtask": "Subtask",
+    "lead": "LEAD",
+    "closeAgent": "Close agent",
+    "contextUsed": "{{pct}}% context used ({{k}}k tokens)"
+  },
+  "editorTools": {
+    "placeFurniture": "Place furniture",
+    "paintFloor": "Paint floor tiles",
+    "paintWall": "Paint walls",
+    "erase": "Erase tiles",
+    "color": "Color",
+    "clear": "Clear",
+    "colorize": "Colorize"
+  },
+  "changelog": {
+    "whatsNew": "What's New in v{{version}}",
+    "contributors": "Contributors",
+    "viewOnGitHub": "View on GitHub"
+  },
+  "common": {
+    "agent": "Agent {{id}}"
+  }
+}

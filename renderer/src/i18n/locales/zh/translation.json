@@ -1,0 +1,127 @@
+{
+  "toolbar": {
+    "addAgent": "+ 智能体",
+    "layout": "布局",
+    "settings": "设置",
+    "monitor": "监控",
+    "help": "?",
+    "dropdown": {
+      "skipPermissions": "跳过权限模式",
+      "skipPermissionsWarning": "跳过所有工具审批提示",
+      "newSession": "新建会话",
+      "resumeSession": "恢复某次会话",
+      "continueSession": "继续上次对话"
+    }
+  },
+  "editor": {
+    "furniture": "家具",
+    "floor": "地板",
+    "wall": "墙壁",
+    "erase": "擦除",
+    "desks": "桌子",
+    "chairs": "椅子",
+    "storage": "储物柜",
+    "tech": "电子设备",
+    "decor": "装饰",
+    "wallCategory": "墙饰",
+    "misc": "其他",
+    "pick": "拾取",
+    "select": "选择"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "openSessionsFolder": "打开会话文件夹",
+    "exportLayout": "导出布局",
+    "importLayout": "导入布局",
+    "addAssetDirectory": "添加资源目录",
+    "sound": "声音通知",
+    "watchAllSessions": "监视所有会话",
+    "instantDetection": "实时检测 (Hooks)",
+    "alwaysShowLabels": "始终显示标签",
+    "debugView": "调试视图"
+  },
+  "monitor": {
+    "title": "会话监控",
+    "noSessions": "没有活动会话",
+    "justNow": "刚刚",
+    "secondsAgo": "{{count}}秒前",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前"
+  },
+  "terminal": {
+    "close": "X"
+  },
+  "zoom": {
+    "zoomIn": "放大 (Ctrl+滚轮)",
+    "zoomOut": "缩小 (Ctrl+滚轮)",
+    "reset": "重置视图"
+  },
+  "help": {
+    "title": "帮助",
+    "features": "功能",
+    "shortcuts": "快捷键",
+    "doubleClickAgent": "双击角色打开其终端",
+    "clickAgent": "单击角色选中，单击座位重新分配",
+    "middleDrag": "中键拖动平移视图",
+    "shiftScroll": "Shift + 滚轮水平平移",
+    "ctrlScroll": "Ctrl + 滚轮缩放",
+    "clickBulletin": "点击公告板打开监控",
+    "addAgent": "使用 '+ 智能体' 创建新会话",
+    "layoutEditor": "使用 '布局' 按钮编辑办公室",
+    "editRotate": "R \u2014 旋转家具",
+    "editToggle": "T \u2014 切换家具状态",
+    "editUndo": "Ctrl+Z \u2014 撤销",
+    "editRedo": "Ctrl+Y \u2014 重做",
+    "editEsc": "Esc \u2014 退出编辑器"
+  },
+  "editActions": {
+    "undo": "撤销",
+    "undoTitle": "撤销 (Ctrl+Z)",
+    "redo": "重做",
+    "redoTitle": "重做 (Ctrl+Y)",
+    "save": "保存",
+    "saveTitle": "保存布局",
+    "reset": "重置",
+    "resetTitle": "重置为上次保存的布局",
+    "resetConfirm": "确定重置？",
+    "yes": "是",
+    "no": "否"
+  },
+  "migration": {
+    "title": "我们欠您一个道歉！",
+    "message": "我们刚刚将资源迁移为完全开源，所有内容均从头精心构建。",
+    "resetNotice": "遗憾的是，这意味着您之前的布局不得不重置。",
+    "stayTuned": "敬请期待，感谢使用 Claude Code Office！",
+    "gotIt": "知道了"
+  },
+  "version": {
+    "updated": "已更新至 v{{version}}！",
+    "whatsNew": "查看新特性"
+  },
+  "overlay": {
+    "needsApproval": "等待审批",
+    "idle": "空闲",
+    "subtask": "子任务",
+    "lead": "负责人",
+    "closeAgent": "关闭智能体",
+    "contextUsed": "已使用 {{pct}}% 上下文（{{k}}k tokens）"
+  },
+  "editorTools": {
+    "placeFurniture": "放置家具",
+    "paintFloor": "涂刷地板",
+    "paintWall": "涂刷墙壁",
+    "erase": "擦除方块",
+    "color": "颜色",
+    "clear": "清除",
+    "colorize": "着色"
+  },
+  "changelog": {
+    "whatsNew": "v{{version}} 更新内容",
+    "contributors": "贡献者",
+    "viewOnGitHub": "在 GitHub 上查看"
+  },
+  "common": {
+    "agent": "智能体 {{id}}"
+  }
+}

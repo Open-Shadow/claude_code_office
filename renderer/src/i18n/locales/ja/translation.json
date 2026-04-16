@@ -1,0 +1,127 @@
+{
+  "toolbar": {
+    "addAgent": "+ エージェント",
+    "layout": "レイアウト",
+    "settings": "設定",
+    "monitor": "モニター",
+    "help": "?",
+    "dropdown": {
+      "skipPermissions": "権限スキップモード",
+      "skipPermissionsWarning": "すべてのツール承認プロンプトをバイパス",
+      "newSession": "新規セッション",
+      "resumeSession": "セッションを再開",
+      "continueSession": "前回の会話を続行"
+    }
+  },
+  "editor": {
+    "furniture": "家具",
+    "floor": "床",
+    "wall": "壁",
+    "erase": "消去",
+    "desks": "デスク",
+    "chairs": "チェア",
+    "storage": "収納",
+    "tech": "電子機器",
+    "decor": "装飾",
+    "wallCategory": "壁飾り",
+    "misc": "その他",
+    "pick": "ピック",
+    "select": "選択"
+  },
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "openSessionsFolder": "セッションフォルダーを開く",
+    "exportLayout": "レイアウトをエクスポート",
+    "importLayout": "レイアウトをインポート",
+    "addAssetDirectory": "アセットディレクトリを追加",
+    "sound": "サウンド通知",
+    "watchAllSessions": "すべてのセッションを監視",
+    "instantDetection": "リアルタイム検出 (Hooks)",
+    "alwaysShowLabels": "常にラベルを表示",
+    "debugView": "デバッグビュー"
+  },
+  "monitor": {
+    "title": "セッションモニター",
+    "noSessions": "アクティブなセッションなし",
+    "justNow": "たった今",
+    "secondsAgo": "{{count}}秒前",
+    "minutesAgo": "{{count}}分前",
+    "hoursAgo": "{{count}}時間前"
+  },
+  "terminal": {
+    "close": "X"
+  },
+  "zoom": {
+    "zoomIn": "ズームイン (Ctrl+スクロール)",
+    "zoomOut": "ズームアウト (Ctrl+スクロール)",
+    "reset": "ビューをリセット"
+  },
+  "help": {
+    "title": "ヘルプ",
+    "features": "機能",
+    "shortcuts": "ショートカット",
+    "doubleClickAgent": "キャラクターをダブルクリックでターミナルを開く",
+    "clickAgent": "クリックで選択、座席をクリックで再配置",
+    "middleDrag": "中ボタンドラッグでビューをパン",
+    "shiftScroll": "Shift + スクロールで水平パン",
+    "ctrlScroll": "Ctrl + スクロールでズーム",
+    "clickBulletin": "掲示板をクリックでモニターを開く",
+    "addAgent": "'+ エージェント' で新しいセッションを作成",
+    "layoutEditor": "'レイアウト' ボタンでオフィスを編集",
+    "editRotate": "R \u2014 家具を回転",
+    "editToggle": "T \u2014 家具の状態を切り替え",
+    "editUndo": "Ctrl+Z \u2014 元に戻す",
+    "editRedo": "Ctrl+Y \u2014 やり直し",
+    "editEsc": "Esc \u2014 エディターを終了"
+  },
+  "editActions": {
+    "undo": "元に戻す",
+    "undoTitle": "元に戻す (Ctrl+Z)",
+    "redo": "やり直し",
+    "redoTitle": "やり直し (Ctrl+Y)",
+    "save": "保存",
+    "saveTitle": "レイアウトを保存",
+    "reset": "リセット",
+    "resetTitle": "最後に保存したレイアウトに戻す",
+    "resetConfirm": "リセットしますか？",
+    "yes": "はい",
+    "no": "いいえ"
+  },
+  "migration": {
+    "title": "お詫び申し上げます！",
+    "message": "アセットを完全にオープンソース化し、すべてゼロから心を込めて再構築しました。",
+    "resetNotice": "残念ながら、これに伴い以前のレイアウトをリセットする必要がありました。",
+    "stayTuned": "今後のアップデートにご期待ください。Claude Code Office をご利用いただきありがとうございます！",
+    "gotIt": "了解"
+  },
+  "version": {
+    "updated": "v{{version}} にアップデートしました！",
+    "whatsNew": "新機能を見る"
+  },
+  "overlay": {
+    "needsApproval": "承認待ち",
+    "idle": "待機中",
+    "subtask": "サブタスク",
+    "lead": "リーダー",
+    "closeAgent": "エージェントを閉じる",
+    "contextUsed": "コンテキスト {{pct}}% 使用中（{{k}}k トークン）"
+  },
+  "editorTools": {
+    "placeFurniture": "家具を配置",
+    "paintFloor": "床タイルを塗る",
+    "paintWall": "壁を塗る",
+    "erase": "タイルを消去",
+    "color": "色",
+    "clear": "クリア",
+    "colorize": "着色"
+  },
+  "changelog": {
+    "whatsNew": "v{{version}} の新機能",
+    "contributors": "コントリビューター",
+    "viewOnGitHub": "GitHub で見る"
+  },
+  "common": {
+    "agent": "エージェント {{id}}"
+  }
+}

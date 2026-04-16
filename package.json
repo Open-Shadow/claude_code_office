@@ -1,0 +1,35 @@
+{
+  "name": "claude-code-office",
+  "version": "0.1.0",
+  "description": "Pixel art office for managing Claude Code sessions",
+  "main": "dist/electron/main.js",
+  "bin": {
+    "claude-office": "./bin/claude-office.js"
+  },
+  "scripts": {
+    "dev": "npm run build && electron .",
+    "dev:electron": "tsc -p tsconfig.electron.json",
+    "dev:renderer": "cd renderer && npm run dev",
+    "dev:start": "electron .",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:renderer": "cd renderer && npm run build",
+    "build": "npm run build:electron && npm run build:renderer",
+    "package": "npm run build && electron-builder",
+    "package:dir": "npm run build && electron-builder --dir",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "electron-store": "^10.0.0",
+    "node-pty": "^1.0.0",
+    "pngjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "@types/pngjs": "^6.0.5",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.9.3"
+  }
+}

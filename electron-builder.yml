@@ -1,0 +1,44 @@
+appId: com.claude-code-office
+productName: Claude Code Office
+directories:
+  output: release
+asar: true
+asarUnpack:
+  - "node_modules/node-pty/**/*"
+
+files:
+  - dist/**/*
+  - assets/**/*
+  - plugins/**/*
+  - bin/**/*
+  - package.json
+  - "!**/*.ts"
+  - "!**/*.ts.map"
+  - "!**/tsconfig*.json"
+  - "!**/.gitignore"
+  - "!**/node_modules/.cache/**"
+  - "!server/node_modules/**"
+  - "!server/__tests__/**"
+  - "!server/vitest.config.ts"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Claude Code Office
+  installerIcon: assets/icon.png
+  uninstallerIcon: assets/icon.png
+
+npmRebuild: true
+nodeGypRebuild: false
+
+extraResources: []
