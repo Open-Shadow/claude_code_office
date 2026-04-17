@@ -31,6 +31,8 @@ export interface SessionInfo {
 
 interface SessionEntry extends SessionInfo {
   pty: pty.IPty;
+  /** Set to true once the pty process has exited — prevents write/resize on a closing handle. */
+  exited: boolean;
 }
 
 interface PersistedSession {
@@ -111,6 +113,7 @@ export class SessionManager {
       workDir,
       projectName,
       pty: ptyProcess,
+      exited: false,
     };
 
     ptyProcess.onData((data: string) => {
@@ -118,6 +121,8 @@ export class SessionManager {
     });
 
     ptyProcess.onExit(({ exitCode, signal }) => {
+      // Mark as exited immediately to prevent write/resize on closing handle
+      entry.exited = true;
       // Only fire onExit callback if the session hasn't already been destroyed
       // (destroySession deletes the entry and sends its own agentClosed event)
       if (this.sessions.has(id)) {
@@ -139,6 +144,7 @@ export class SessionManager {
   destroySession(id: number): void {
     const entry = this.sessions.get(id);
     if (!entry) return;
+    entry.exited = true;
     try {
       entry.pty.kill();
     } catch {
@@ -179,7 +185,7 @@ export class SessionManager {
    */
   writeToPty(id: number, data: string): void {
     const entry = this.sessions.get(id);
-    if (!entry) return;
+    if (!entry || entry.exited) return;
     try {
       entry.pty.write(data);
     } catch {
@@ -192,7 +198,7 @@ export class SessionManager {
    */
   resizePty(id: number, cols: number, rows: number): void {
     const entry = this.sessions.get(id);
-    if (!entry) return;
+    if (!entry || entry.exited) return;
     try {
       entry.pty.resize(cols, rows);
     } catch {
@@ -277,6 +283,7 @@ export class SessionManager {
       workDir,
       projectName,
       pty: ptyProcess,
+      exited: false,
     };
 
     ptyProcess.onData((data: string) => {
@@ -284,6 +291,7 @@ export class SessionManager {
     });
 
     ptyProcess.onExit(({ exitCode, signal }) => {
+      entry.exited = true;
       if (this.sessions.has(id)) {
         this.callbacks.onExit(id, exitCode, signal);
         this.sessions.delete(id);
