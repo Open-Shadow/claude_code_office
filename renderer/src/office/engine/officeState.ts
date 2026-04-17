@@ -141,18 +141,29 @@ export class OfficeState {
 
     // First pass: try to keep characters at their existing seats
     for (const ch of this.characters.values()) {
+      // Monitor NPC has no seat — skip seat assignment entirely
+      if (ch.isMonitorNpc) continue;
       if (ch.seatId && this.seats.has(ch.seatId)) {
         const seat = this.seats.get(ch.seatId)!;
         if (!seat.assigned) {
           seat.assigned = true;
-          // Snap character to seat position
-          ch.tileCol = seat.seatCol;
-          ch.tileRow = seat.seatRow;
-          const cx = seat.seatCol * TILE_SIZE + TILE_SIZE / 2;
-          const cy = seat.seatRow * TILE_SIZE + TILE_SIZE / 2;
-          ch.x = cx;
-          ch.y = cy;
-          ch.dir = seat.facingDir;
+          // If the character is currently walking (has an active path),
+          // preserve their position and movement state to avoid teleporting.
+          // Only snap idle/typing characters to the seat position.
+          if (ch.state === CharacterState.WALK && ch.path.length > 0) {
+            // Invalidate the current path since tile map changed,
+            // but keep position — the FSM will handle re-pathing on next update
+            ch.path = [];
+            ch.moveProgress = 0;
+          } else {
+            ch.tileCol = seat.seatCol;
+            ch.tileRow = seat.seatRow;
+            const cx = seat.seatCol * TILE_SIZE + TILE_SIZE / 2;
+            const cy = seat.seatRow * TILE_SIZE + TILE_SIZE / 2;
+            ch.x = cx;
+            ch.y = cy;
+            ch.dir = seat.facingDir;
+          }
           continue;
         }
       }
@@ -162,28 +173,39 @@ export class OfficeState {
     // Second pass: assign remaining characters to free seats
     for (const ch of this.characters.values()) {
       if (ch.seatId) continue;
+      // Monitor NPC should never get a seat
+      if (ch.isMonitorNpc) continue;
       const seatId = this.findFreeSeat();
       if (seatId) {
         this.seats.get(seatId)!.assigned = true;
         ch.seatId = seatId;
         const seat = this.seats.get(seatId)!;
-        ch.tileCol = seat.seatCol;
-        ch.tileRow = seat.seatRow;
-        ch.x = seat.seatCol * TILE_SIZE + TILE_SIZE / 2;
-        ch.y = seat.seatRow * TILE_SIZE + TILE_SIZE / 2;
-        ch.dir = seat.facingDir;
+        // If the character is walking or wandering, just record the new seat
+        // and let the FSM navigate there naturally; don't teleport.
+        if (ch.state === CharacterState.WALK || ch.state === CharacterState.IDLE) {
+          ch.path = [];
+          ch.moveProgress = 0;
+        } else {
+          ch.tileCol = seat.seatCol;
+          ch.tileRow = seat.seatRow;
+          ch.x = seat.seatCol * TILE_SIZE + TILE_SIZE / 2;
+          ch.y = seat.seatRow * TILE_SIZE + TILE_SIZE / 2;
+          ch.dir = seat.facingDir;
+        }
       }
     }
 
     // Relocate any characters that ended up outside bounds or on non-walkable tiles
     for (const ch of this.characters.values()) {
-      if (ch.seatId) continue; // seated characters are fine
-      if (
+      if (ch.seatId && !ch.isMonitorNpc) continue; // seated non-NPC characters are fine
+      const outOfBounds =
         ch.tileCol < 0 ||
         ch.tileCol >= layout.cols ||
         ch.tileRow < 0 ||
-        ch.tileRow >= layout.rows
-      ) {
+        ch.tileRow >= layout.rows;
+      const onBlockedTile =
+        !outOfBounds && !isWalkable(ch.tileCol, ch.tileRow, this.tileMap, this.blockedTiles);
+      if (outOfBounds || onBlockedTile) {
         this.relocateCharacterToWalkable(ch);
       }
     }
@@ -224,6 +246,7 @@ export class OfficeState {
     ch.tileRow = spawn.row;
     ch.isMonitorNpc = true;
     ch.folderName = 'Monitor';
+    ch.agentName = 'Monitor';
     ch.npcBehavior = 'wandering';
     ch.npcBehaviorTimer = 5; // Start first behavior quickly
     ch.isActive = false;
@@ -395,6 +418,10 @@ export class OfficeState {
 
     if (folderName) {
       ch.folderName = folderName;
+    }
+    // Assign a display name for standalone agents (team agents get theirs via agentCreated)
+    if (!ch.agentName) {
+      ch.agentName = folderName || `Claude #${id}`;
     }
     if (!skipSpawnEffect) {
       ch.matrixEffect = 'spawn';
@@ -581,6 +608,8 @@ export class OfficeState {
         // Already despawning — just clean up maps
         this.subagentIdMap.delete(key);
         this.subagentMeta.delete(id);
+        if (this.selectedAgentId === id) this.selectedAgentId = null;
+        if (this.cameraFollowId === id) this.cameraFollowId = null;
         return;
       }
       if (ch.seatId) {

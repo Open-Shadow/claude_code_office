@@ -14,6 +14,7 @@ import type { SessionInfo } from './sessionManager.js';
 export interface SessionSummary {
   agentId: number;
   projectName: string;
+  agentName?: string;
   summary: string;
   lastActive: number;
 }
@@ -22,14 +23,24 @@ export interface SessionSummary {
 
 export class MonitorAgent {
   private interval: NodeJS.Timeout | null = null;
-  private summaries = new Map<number, { projectName: string; summary: string; lastActive: number }>();
+  private isPolling = false;
+  private summaries = new Map<number, { projectName: string; agentName?: string; summary: string; lastActive: number }>();
   private currentLocale: string = 'en';
+  private anthropic: import('@anthropic-ai/sdk').default | null = null;
 
   constructor(
     private getApiKey: () => string | null,
     private getSessions: () => SessionInfo[],
     private onUpdate?: (summaries: SessionSummary[]) => void,
   ) {}
+
+  private async getAnthropicClient(): Promise<import('@anthropic-ai/sdk').default> {
+    if (!this.anthropic) {
+      const { default: Anthropic } = await import('@anthropic-ai/sdk');
+      this.anthropic = new Anthropic({ apiKey: this.resolveApiKey() ?? undefined });
+    }
+    return this.anthropic;
+  }
 
   /** Update the locale used for generating summaries. */
   setLocale(locale: string): void {
@@ -59,6 +70,7 @@ export class MonitorAgent {
     return Array.from(this.summaries.entries()).map(([agentId, data]) => ({
       agentId,
       projectName: data.projectName,
+      agentName: data.agentName,
       summary: data.summary,
       lastActive: data.lastActive,
     }));
@@ -67,8 +79,13 @@ export class MonitorAgent {
   // ── Private ──────────────────────────────────────────────
 
   private async poll(): Promise<void> {
+    if (this.isPolling) return;
+    this.isPolling = true;
+    try {
     const sessions = this.getSessions();
-    if (sessions.length === 0) return;
+    if (sessions.length === 0) {
+      return;
+    }
 
     const apiKey = this.resolveApiKey();
 
@@ -84,6 +101,7 @@ export class MonitorAgent {
         if (!logExcerpt) {
           this.summaries.set(session.id, {
             projectName: session.projectName,
+            agentName: session.projectName,
             summary: 'No log data available',
             lastActive: Date.now(),
           });
@@ -93,6 +111,7 @@ export class MonitorAgent {
         if (!apiKey) {
           this.summaries.set(session.id, {
             projectName: session.projectName,
+            agentName: session.projectName,
             summary: 'API key not configured',
             lastActive: Date.now(),
           });
@@ -102,6 +121,7 @@ export class MonitorAgent {
         const summary = await this.generateSummary(apiKey, logExcerpt);
         this.summaries.set(session.id, {
           projectName: session.projectName,
+          agentName: session.projectName,
           summary,
           lastActive: Date.now(),
         });
@@ -111,6 +131,7 @@ export class MonitorAgent {
         if (!this.summaries.has(session.id)) {
           this.summaries.set(session.id, {
             projectName: session.projectName,
+            agentName: session.projectName,
             summary: 'Error reading session',
             lastActive: Date.now(),
           });
@@ -121,6 +142,9 @@ export class MonitorAgent {
     // Notify listener
     if (this.onUpdate) {
       this.onUpdate(this.getSummaries());
+    }
+    } finally {
+      this.isPolling = false;
     }
   }
 
@@ -207,14 +231,12 @@ export class MonitorAgent {
   }
 
   /** Call Claude API to generate a one-line summary in the user's language. */
-  private async generateSummary(apiKey: string, logExcerpt: string): Promise<string> {
+  private async generateSummary(_apiKey: string, logExcerpt: string): Promise<string> {
     try {
       const langMap: Record<string, string> = { en: 'English', zh: '中文', ja: '日本語' };
       const lang = langMap[this.currentLocale] ?? 'English';
 
-      // @anthropic-ai/sdk is ESM-only, use dynamic import in CommonJS
-      const { default: Anthropic } = await import('@anthropic-ai/sdk');
-      const client = new Anthropic({ apiKey });
+      const client = await this.getAnthropicClient();
       const response = await client.messages.create({
         model: 'claude-3-5-haiku-latest',
         max_tokens: 100,

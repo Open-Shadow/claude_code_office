@@ -1,5 +1,8 @@
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import { SearchAddon } from '@xterm/addon-search';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
 
 const electronAPI = (window as unknown as Record<string, unknown>).electronAPI as
   | { send(channel: string, data: unknown): void; on(channel: string, callback: (...args: unknown[]) => void): void }
@@ -32,15 +35,39 @@ const TERMINAL_THEME = {
 interface TerminalEntry {
   terminal: Terminal;
   fitAddon: FitAddon;
+  searchAddon: SearchAddon;
+  /** The container element the terminal is currently attached to (null when detached). */
+  container: HTMLElement | null;
 }
 
 export class TerminalManager {
   private terminals: Map<number, TerminalEntry> = new Map();
 
+  /**
+   * Create a new terminal for `agentId`, or re-attach an existing one to `container`.
+   * Returns the Terminal instance (new or existing).
+   */
   createTerminal(agentId: number, container: HTMLElement): Terminal {
-    // If a terminal already exists for this agent, destroy it first
-    if (this.terminals.has(agentId)) {
-      this.destroyTerminal(agentId);
+    const existing = this.terminals.get(agentId);
+    if (existing) {
+      // Re-attach: move the xterm DOM into the new container
+      const xtermEl = existing.terminal.element;
+      if (xtermEl) {
+        container.appendChild(xtermEl);
+      }
+      existing.container = container;
+
+      // Re-fit after a frame
+      requestAnimationFrame(() => {
+        try {
+          existing.fitAddon.fit();
+          const dims = existing.fitAddon.proposeDimensions();
+          if (dims) {
+            electronAPI?.send('resize-pty', { agentId, cols: dims.cols, rows: dims.rows });
+          }
+        } catch { /* container might not be visible yet */ }
+      });
+      return existing.terminal;
     }
 
     const terminal = new Terminal({
@@ -56,13 +83,40 @@ export class TerminalManager {
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
 
+    // Web links — make URLs clickable
+    try {
+      terminal.loadAddon(new WebLinksAddon());
+    } catch (err) {
+      console.warn('[TerminalManager] Failed to load WebLinksAddon:', err);
+    }
+
+    // Unicode11 — CJK and emoji wide-character support
+    try {
+      const unicode11 = new Unicode11Addon();
+      terminal.loadAddon(unicode11);
+      terminal.unicode.activeVersion = '11';
+    } catch (err) {
+      console.warn('[TerminalManager] Failed to load Unicode11Addon:', err);
+    }
+
+    // Search addon
+    const searchAddon = new SearchAddon();
+    try {
+      terminal.loadAddon(searchAddon);
+    } catch (err) {
+      console.warn('[TerminalManager] Failed to load SearchAddon:', err);
+    }
+
+    const entry: TerminalEntry = { terminal, fitAddon, searchAddon, container };
+
     terminal.open(container);
 
-    // Fit after a frame so the container has layout dimensions
-    requestAnimationFrame(() => {
+    // Fit after a short delay so the container has layout dimensions.
+    // Use setTimeout instead of requestAnimationFrame — rAF can fire before
+    // the Electron compositor has finished layout, resulting in 0-size container.
+    setTimeout(() => {
       try {
         fitAddon.fit();
-        // Explicitly notify main process of actual terminal size after fit
         const dims = fitAddon.proposeDimensions();
         if (dims) {
           electronAPI?.send('resize-pty', { agentId, cols: dims.cols, rows: dims.rows });
@@ -70,7 +124,7 @@ export class TerminalManager {
       } catch {
         // container might not be visible yet
       }
-    });
+    }, 50);
 
     // Forward user input to the main process pty
     terminal.onData((data) => {
@@ -82,8 +136,23 @@ export class TerminalManager {
       electronAPI?.send('resize-pty', { agentId, cols, rows });
     });
 
-    this.terminals.set(agentId, { terminal, fitAddon });
+    this.terminals.set(agentId, entry);
     return terminal;
+  }
+
+  /**
+   * Detach the terminal DOM from its container without destroying the instance.
+   * The terminal keeps running and buffering output.
+   */
+  detachTerminal(agentId: number): void {
+    const entry = this.terminals.get(agentId);
+    if (entry && entry.container) {
+      const xtermEl = entry.terminal.element;
+      if (xtermEl && xtermEl.parentElement === entry.container) {
+        entry.container.removeChild(xtermEl);
+      }
+      entry.container = null;
+    }
   }
 
   destroyTerminal(agentId: number): void {
@@ -96,6 +165,14 @@ export class TerminalManager {
 
   getTerminal(agentId: number): Terminal | undefined {
     return this.terminals.get(agentId)?.terminal;
+  }
+
+  getSearchAddon(agentId: number): SearchAddon | undefined {
+    return this.terminals.get(agentId)?.searchAddon;
+  }
+
+  hasTerminal(agentId: number): boolean {
+    return this.terminals.has(agentId);
   }
 
   writeToTerminal(agentId: number, data: string): void {

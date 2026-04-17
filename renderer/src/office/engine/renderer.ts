@@ -22,6 +22,11 @@ import {
   GHOST_VALID_TINT,
   GRID_LINE_COLOR,
   HOVERED_OUTLINE_ALPHA,
+  NAME_LABEL_COLOR,
+  NAME_LABEL_FONT_SIZE,
+  NAME_LABEL_SHADOW_BLUR,
+  NAME_LABEL_SHADOW_COLOR,
+  NAME_LABEL_VERTICAL_OFFSET_PX,
   OUTLINE_Z_SORT_OFFSET,
   PLANT_BREATHE_AMPLITUDE,
   PLANT_BREATHE_SPEED,
@@ -550,6 +555,42 @@ function renderBubbles(
   }
 }
 
+// ── Name labels (always visible above characters) ───────────
+
+function renderNameLabels(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const fontSize = Math.max(NAME_LABEL_FONT_SIZE * zoom, 6);
+  ctx.save();
+  ctx.font = `${fontSize}px "FS Pixel Sans", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+
+  for (const ch of characters) {
+    // Skip characters without a name or during matrix effects
+    const name = ch.agentName;
+    if (!name || ch.matrixEffect) continue;
+
+    const sittingOff = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0;
+    const labelX = Math.round(offsetX + ch.x * zoom);
+    const labelY = Math.round(
+      offsetY + (ch.y + sittingOff - NAME_LABEL_VERTICAL_OFFSET_PX) * zoom,
+    );
+
+    // Shadow for readability
+    ctx.shadowColor = NAME_LABEL_SHADOW_COLOR;
+    ctx.shadowBlur = NAME_LABEL_SHADOW_BLUR * zoom;
+    ctx.fillStyle = NAME_LABEL_COLOR;
+    ctx.fillText(name, labelX, labelY);
+  }
+
+  ctx.restore();
+}
+
 export interface ButtonBounds {
   /** Center X in device pixels */
   cx: number;
@@ -653,6 +694,9 @@ export function renderFrame(
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
+
+  // Name labels (always visible above characters)
+  renderNameLabels(ctx, characters, offsetX, offsetY, zoom);
 
   // Editor overlays
   if (editor) {

@@ -209,10 +209,21 @@ export class SessionManager {
   }
 
   /**
+   * Ensure nextId is above the given value to avoid ID collisions
+   * with restored agents that don't have active pty sessions yet.
+   */
+  ensureNextIdAbove(id: number): void {
+    if (id >= this.nextId) {
+      this.nextId = id + 1;
+    }
+  }
+
+  /**
    * Reconnect a persisted agent by spawning a new pty with `claude --resume`.
+   * When originalSessionId is provided, uses `--session-id` to resume the exact session.
    * Returns session info on success, null on failure.
    */
-  reconnectSession(id: number, workDir: string): SessionInfo | null {
+  reconnectSession(id: number, workDir: string, originalSessionId?: string): SessionInfo | null {
     // If a session with this id already exists, just return its info
     if (this.sessions.has(id)) {
       const existing = this.sessions.get(id)!;
@@ -220,9 +231,12 @@ export class SessionManager {
     }
 
     const projectName = path.basename(workDir);
-    const sessionId = crypto.randomUUID();
+    const sessionId = originalSessionId ?? crypto.randomUUID();
 
     const claudeArgs = ['claude', '--resume'];
+    if (originalSessionId) {
+      claudeArgs.push('--session-id', originalSessionId);
+    }
 
     const isWindows = process.platform === 'win32';
     const shell = isWindows ? 'cmd.exe' : (process.env.SHELL || '/bin/bash');

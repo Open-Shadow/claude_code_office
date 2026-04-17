@@ -27,7 +27,7 @@ import { isRotatable } from './office/layout/furnitureCatalog.js';
 import { EditTool } from './office/types.js';
 import { isBrowserRuntime } from './runtime.js';
 import { vscode } from './electronApi.js';
-import { TerminalDialog } from './terminal/TerminalDialog.js';
+import { TerminalDialog, terminalManager } from './terminal/TerminalDialog.js';
 
 // Game state lives outside React — updated imperatively by message handlers
 const officeStateRef = { current: null as OfficeState | null };
@@ -101,9 +101,10 @@ function App() {
     }
   }, [locale]);
 
-  // Auto-close terminal dialog when the agent's pty exits
+  // Auto-close terminal dialog when the agent's pty exits and destroy the cached terminal
   useEffect(() => {
     if (openTerminal && !agents.includes(openTerminal.agentId)) {
+      terminalManager.destroyTerminal(openTerminal.agentId);
       setOpenTerminal(null);
     }
   }, [agents, openTerminal]);
@@ -243,7 +244,6 @@ function App() {
         onDeleteSelected={editor.handleDeleteSelected}
         onRotateSelected={editor.handleRotateSelected}
         onDragMove={editor.handleDragMove}
-        editorTick={editor.editorTick}
         zoom={editor.zoom}
         onZoomChange={editor.handleZoomChange}
         panRef={editor.panRef}
@@ -448,6 +448,7 @@ function App() {
           agentId={openTerminal.agentId}
           projectName={openTerminal.projectName}
           status={agentStatuses[openTerminal.agentId] ?? 'idle'}
+          visible={true}
           onClose={() => setOpenTerminal(null)}
         />
       )}

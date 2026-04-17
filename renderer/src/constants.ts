@@ -138,6 +138,13 @@ export const CHARACTER_HIT_HALF_WIDTH = 8;
 export const CHARACTER_HIT_HEIGHT = 24;
 export const TOOL_OVERLAY_VERTICAL_OFFSET = 32;
 
+// ── Name Label (canvas-rendered, always visible) ────────────
+export const NAME_LABEL_VERTICAL_OFFSET_PX = 28;
+export const NAME_LABEL_FONT_SIZE = 7;
+export const NAME_LABEL_COLOR = '#ffffff';
+export const NAME_LABEL_SHADOW_COLOR = '#000000';
+export const NAME_LABEL_SHADOW_BLUR = 2;
+
 // ── Agent Teams ─────────────────────────────────────────────
 export const MAX_CONTEXT_TOKENS = 200_000;
 export const TOKEN_WARN_THRESHOLD = 0.6;

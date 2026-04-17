@@ -38,7 +38,6 @@ interface OfficeCanvasProps {
   onDeleteSelected: () => void;
   onRotateSelected: () => void;
   onDragMove: (uid: string, newCol: number, newRow: number) => void;
-  editorTick: number;
   zoom: number;
   onZoomChange: (zoom: number) => void;
   panRef: React.MutableRefObject<{ x: number; y: number }>;
@@ -57,7 +56,6 @@ export function OfficeCanvas({
   onDeleteSelected,
   onRotateSelected,
   onDragMove,
-  editorTick: _editorTick,
   zoom,
   onZoomChange,
   panRef,
@@ -292,7 +290,7 @@ export function OfficeCanvas({
       stop();
       observer.disconnect();
     };
-  }, [officeState, resizeCanvas, isEditMode, editorState, _editorTick, zoom, panRef]);
+  }, [officeState, resizeCanvas, isEditMode, editorState, zoom, panRef]);
 
   // Convert CSS mouse coords to world (sprite pixel) coords
   const screenToWorld = useCallback(

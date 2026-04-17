@@ -112,10 +112,14 @@ const sessionManager = new SessionManager({
     if (!mainWindow || !activeTerminals.has(agentId)) return;
     mainWindow.webContents.send('pty-data', { agentId, data });
   },
-  onExit: (agentId, exitCode) => {
+  onExit: (agentId, _exitCode) => {
     activeTerminals.delete(agentId);
     if (mainWindow) {
-      mainWindow.webContents.send('agentClosed', { type: 'agentClosed', id: agentId, exitCode });
+      // Don't remove the agent (character) from the office — just mark it idle.
+      // The agent can be reconnected later or manually closed by the user.
+      // Send a status update + clear tools so the character goes to idle state.
+      mainWindow.webContents.send('agentToolsClear', { type: 'agentToolsClear', id: agentId });
+      mainWindow.webContents.send('agentStatus', { type: 'agentStatus', id: agentId, status: 'idle' });
     }
   },
 });
@@ -213,6 +217,17 @@ function writePersistedAgents(agents: PersistedAgent[]): void {
 
 function removePersistedAgent(id: number): void {
   const agents = readPersistedAgents().filter((a) => a.id !== id);
+  writePersistedAgents(agents);
+}
+
+function upsertPersistedAgent(agent: PersistedAgent): void {
+  const agents = readPersistedAgents();
+  const idx = agents.findIndex((a) => a.id === agent.id);
+  if (idx >= 0) {
+    agents[idx] = agent;
+  } else {
+    agents.push(agent);
+  }
   writePersistedAgents(agents);
 }
 
@@ -374,6 +389,10 @@ function setupIpcHandlers(): void {
           agentMeta[a.id] = { palette: a.palette, hueShift: a.hueShift, seatId: a.seatId ?? undefined };
           folderNames[a.id] = a.projectName;
         }
+        // Ensure sessionManager.nextId won't collide with restored agent IDs
+        const maxId = Math.max(...agentIds);
+        sessionManager.ensureNextIdAbove(maxId);
+
         mainWindow.webContents.send('existingAgents', {
           type: 'existingAgents',
           agents: agentIds,
@@ -396,6 +415,19 @@ function setupIpcHandlers(): void {
             folderName: session.projectName,
             sessionId: session.sessionId,
             workDir: session.workDir,
+          });
+
+          // Persist agent immediately
+          const cliSeats = agentStore.get('seats');
+          const cliSeat = cliSeats[session.id];
+          upsertPersistedAgent({
+            id: session.id,
+            sessionId: session.sessionId,
+            workDir: session.workDir,
+            projectName: session.projectName,
+            palette: cliSeat?.palette ?? 0,
+            hueShift: cliSeat?.hueShift ?? 0,
+            seatId: cliSeat?.seatId ?? null,
           });
         }
       }
@@ -451,6 +483,19 @@ function setupIpcHandlers(): void {
       sessionId: session.sessionId,
       workDir: session.workDir,
     });
+
+    // Persist agent immediately so it survives app restart
+    const seats = agentStore.get('seats');
+    const seat = seats[session.id];
+    upsertPersistedAgent({
+      id: session.id,
+      sessionId: session.sessionId,
+      workDir: session.workDir,
+      projectName: session.projectName,
+      palette: seat?.palette ?? 0,
+      hueShift: seat?.hueShift ?? 0,
+      seatId: seat?.seatId ?? null,
+    });
   });
 
   ipcMain.on('focusAgent', (_event, msg: Record<string, unknown>) => {
@@ -459,7 +504,7 @@ function setupIpcHandlers(): void {
 
   ipcMain.on('closeAgent', (_event, msg: Record<string, unknown>) => {
     const id = msg?.id as number;
-    if (!id) return;
+    if (id === undefined || id === null) return;
     sessionManager.destroySession(id);
     removePersistedAgent(id);
     if (mainWindow) {
@@ -635,7 +680,7 @@ function setupIpcHandlers(): void {
 
   ipcMain.on('open-terminal', (_event, msg: Record<string, unknown>) => {
     const id = msg?.agentId as number;
-    if (!id) return;
+    if (id === undefined || id === null) return;
     activeTerminals.add(id);
 
     // If no active pty exists for this agent (persisted but not running), reconnect
@@ -643,7 +688,7 @@ function setupIpcHandlers(): void {
       const persisted = readPersistedAgents();
       const agent = persisted.find((a) => a.id === id);
       if (agent) {
-        const session = sessionManager.reconnectSession(id, agent.workDir);
+        const session = sessionManager.reconnectSession(id, agent.workDir, agent.sessionId);
         if (!session) {
           console.error('[Main] Failed to reconnect session for agent:', id);
         }
@@ -654,13 +699,13 @@ function setupIpcHandlers(): void {
   ipcMain.on('pty-input', (_event, msg: Record<string, unknown>) => {
     const id = msg?.agentId as number;
     const data = msg?.data as string;
-    if (!id || data === undefined) return;
+    if (id === undefined || id === null || data === undefined) return;
     sessionManager.writeToPty(id, data);
   });
 
   ipcMain.on('close-terminal', (_event, msg: Record<string, unknown>) => {
     const id = msg?.agentId as number;
-    if (!id) return;
+    if (id === undefined || id === null) return;
     activeTerminals.delete(id);
   });
 
@@ -668,7 +713,7 @@ function setupIpcHandlers(): void {
     const id = msg?.agentId as number;
     const cols = msg?.cols as number;
     const rows = msg?.rows as number;
-    if (!id || !cols || !rows) return;
+    if (id === undefined || id === null || !cols || !rows) return;
     sessionManager.resizePty(id, cols, rows);
   });
 
@@ -720,24 +765,26 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   monitorAgent.stop();
 
-  // Persist all active sessions with their character metadata before destroying
-  const allSessions = sessionManager.getAllSessions();
+  // Update persisted agents with latest seat metadata before exiting.
+  // We start from the already-persisted list (which was kept up-to-date via
+  // upsertPersistedAgent / removePersistedAgent) and just refresh seat info
+  // from the agent store so that palette/hue/seat changes made during this
+  // session are saved.
+  const existingPersisted = readPersistedAgents();
   const seats = agentStore.get('seats');
-  const persistedAgents: PersistedAgent[] = allSessions.map((s) => {
-    const seat = seats[s.id];
+  const updatedPersisted = existingPersisted.map((a) => {
+    const seat = seats[a.id];
     return {
-      id: s.id,
-      sessionId: s.sessionId,
-      workDir: s.workDir,
-      projectName: s.projectName,
-      palette: seat?.palette ?? 0,
-      hueShift: seat?.hueShift ?? 0,
-      seatId: seat?.seatId ?? null,
+      ...a,
+      palette: seat?.palette ?? a.palette,
+      hueShift: seat?.hueShift ?? a.hueShift,
+      seatId: seat?.seatId ?? a.seatId,
     };
   });
-  writePersistedAgents(persistedAgents);
+  writePersistedAgents(updatedPersisted);
 
   // Send Ctrl+C to each pty before killing
+  const allSessions = sessionManager.getAllSessions();
   for (const s of allSessions) {
     try { sessionManager.writeToPty(s.id, '\x03'); } catch { /* ignore */ }
   }

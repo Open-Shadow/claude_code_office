@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // ── Types ────────────────────────────────────────────────────
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 export interface SessionSummaryData {
   agentId: number;
   projectName: string;
+  agentName?: string;
   summary: string;
   lastActive: number;
 }
@@ -36,6 +37,18 @@ export function MonitorPanel({ summaries, onClose }: MonitorPanelProps) {
     return () => clearInterval(timer);
   }, []);
 
+  // Position & size state
+  const [pos, setPos] = useState({ x: Math.round(window.innerWidth / 2 - 220), y: 12 });
+  const [size, setSize] = useState({ w: 440, h: 520 });
+
+  // Drag state (title bar)
+  const isDragging = useRef(false);
+  const dragStart = useRef({ mouseX: 0, mouseY: 0, posX: 0, posY: 0 });
+
+  // Resize state (bottom-right corner)
+  const isResizing = useRef(false);
+  const resizeStart = useRef({ mouseX: 0, mouseY: 0, w: 0, h: 0 });
+
   const handleToggle = useCallback(() => {
     setCollapsed((v) => !v);
   }, []);
@@ -48,13 +61,64 @@ export function MonitorPanel({ summaries, onClose }: MonitorPanelProps) {
     return t('monitor.hoursAgo', { count: Math.floor(diff / 3600) });
   }
 
+  // ── Drag handling ──
+  const onTitleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if ((e.target as HTMLElement).closest('[data-close-btn]')) return;
+      e.preventDefault();
+      isDragging.current = true;
+      dragStart.current = { mouseX: e.clientX, mouseY: e.clientY, posX: pos.x, posY: pos.y };
+
+      const onMove = (ev: MouseEvent) => {
+        if (!isDragging.current) return;
+        setPos({
+          x: dragStart.current.posX + ev.clientX - dragStart.current.mouseX,
+          y: dragStart.current.posY + ev.clientY - dragStart.current.mouseY,
+        });
+      };
+      const onUp = () => {
+        isDragging.current = false;
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [pos],
+  );
+
+  // ── Resize handling ──
+  const onResizeMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isResizing.current = true;
+      resizeStart.current = { mouseX: e.clientX, mouseY: e.clientY, w: size.w, h: size.h };
+
+      const onMove = (ev: MouseEvent) => {
+        if (!isResizing.current) return;
+        const newW = Math.max(280, resizeStart.current.w + ev.clientX - resizeStart.current.mouseX);
+        const newH = Math.max(200, resizeStart.current.h + ev.clientY - resizeStart.current.mouseY);
+        setSize({ w: newW, h: newH });
+      };
+      const onUp = () => {
+        isResizing.current = false;
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [size],
+  );
+
   return (
     <div
       style={{
         position: 'fixed',
-        right: 12,
-        top: 12,
-        width: 320,
+        left: pos.x,
+        top: pos.y,
+        width: size.w,
         zIndex: 60,
         fontFamily: "'FS Pixel Sans', monospace",
         background: '#1e1e2e',
@@ -62,8 +126,9 @@ export function MonitorPanel({ summaries, onClose }: MonitorPanelProps) {
         imageRendering: 'pixelated',
       }}
     >
-      {/* Title bar */}
+      {/* Title bar (draggable) */}
       <div
+        onMouseDown={onTitleMouseDown}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -71,21 +136,23 @@ export function MonitorPanel({ summaries, onClose }: MonitorPanelProps) {
           padding: '8px 10px',
           background: '#282a36',
           borderBottom: collapsed ? 'none' : '2px solid var(--pixel-border, #44475a)',
-          cursor: 'pointer',
+          cursor: 'grab',
           userSelect: 'none',
         }}
-        onClick={handleToggle}
       >
         <span
           style={{
             fontSize: 16,
             color: '#bd93f9',
             letterSpacing: 1,
+            cursor: 'pointer',
           }}
+          onClick={handleToggle}
         >
           {collapsed ? '+ ' : '- '}{t('monitor.title')}
         </span>
         <button
+          data-close-btn
           onClick={(e) => {
             e.stopPropagation();
             onClose();
@@ -107,7 +174,7 @@ export function MonitorPanel({ summaries, onClose }: MonitorPanelProps) {
 
       {/* Session list */}
       {!collapsed && (
-        <div style={{ maxHeight: 400, overflowY: 'auto', padding: '6px 0' }}>
+        <div style={{ height: size.h - 40, overflowY: 'auto', padding: '6px 0' }}>
           {summaries.length === 0 ? (
             <div
               style={{
@@ -151,7 +218,7 @@ export function MonitorPanel({ summaries, onClose }: MonitorPanelProps) {
                       flex: 1,
                     }}
                   >
-                    {s.projectName}
+                    {s.agentName || s.projectName}
                   </span>
                   <span style={{ fontSize: 11, color: '#6272a4', flexShrink: 0 }}>
                     {relativeTime(s.lastActive)}
@@ -172,6 +239,22 @@ export function MonitorPanel({ summaries, onClose }: MonitorPanelProps) {
             ))
           )}
         </div>
+      )}
+
+      {/* Resize handle (bottom-right corner) */}
+      {!collapsed && (
+        <div
+          onMouseDown={onResizeMouseDown}
+          style={{
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            width: 16,
+            height: 16,
+            cursor: 'nwse-resize',
+            background: 'linear-gradient(135deg, transparent 50%, #585b70 50%)',
+          }}
+        />
       )}
     </div>
   );

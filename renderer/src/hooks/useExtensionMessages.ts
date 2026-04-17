@@ -108,6 +108,10 @@ export function useExtensionMessages(
 
   // Track whether initial layout has been loaded (ref to avoid re-render)
   const layoutReadyRef = useRef(false);
+  const isEditDirtyRef = useRef(isEditDirty);
+  const onLayoutLoadedRef = useRef(onLayoutLoaded);
+  isEditDirtyRef.current = isEditDirty;
+  onLayoutLoadedRef.current = onLayoutLoaded;
 
   useEffect(() => {
     // Buffer agents from existingAgents until layout is loaded
@@ -125,7 +129,7 @@ export function useExtensionMessages(
 
       if (msg.type === 'layoutLoaded') {
         // Skip external layout updates while editor has unsaved changes
-        if (layoutReadyRef.current && isEditDirty?.()) {
+        if (layoutReadyRef.current && isEditDirtyRef.current?.()) {
           console.log('[Webview] Skipping external layout update — editor has unsaved changes');
           return;
         }
@@ -133,10 +137,10 @@ export function useExtensionMessages(
         const layout = rawLayout && rawLayout.version === 1 ? migrateLayoutColors(rawLayout) : null;
         if (layout) {
           os.rebuildFromLayout(layout);
-          onLayoutLoaded?.(layout);
+          onLayoutLoadedRef.current?.(layout);
         } else {
           // Default layout — snapshot whatever OfficeState built
-          onLayoutLoaded?.(os.getLayout());
+          onLayoutLoadedRef.current?.(os.getLayout());
         }
         // Add buffered agents now that layout (and seats) are correct
         for (const p of pendingAgents) {
@@ -179,6 +183,11 @@ export function useExtensionMessages(
           }
         } else {
           os.addAgent(id, undefined, undefined, undefined, undefined, folderName);
+          // Ensure standalone agents have a display name
+          const standaloneChar = os.characters.get(id);
+          if (standaloneChar && !standaloneChar.agentName) {
+            standaloneChar.agentName = folderName || `Claude #${id}`;
+          }
         }
         saveAgentSeats(os);
       } else if (msg.type === 'agentClosed') {
@@ -214,16 +223,25 @@ export function useExtensionMessages(
           { palette?: number; hueShift?: number; seatId?: string }
         >;
         const folderNames = (msg.folderNames || {}) as Record<number, string>;
-        // Buffer agents — they'll be added in layoutLoaded after seats are built
-        for (const id of incoming) {
-          const m = meta[id];
-          pendingAgents.push({
-            id,
-            palette: m?.palette,
-            hueShift: m?.hueShift,
-            seatId: m?.seatId,
-            folderName: folderNames[id],
-          });
+        if (layoutReadyRef.current) {
+          // Layout already loaded — add agents directly to OfficeState
+          for (const id of incoming) {
+            const m = meta[id];
+            os.addAgent(id, m?.palette, m?.hueShift, m?.seatId, true, folderNames[id]);
+          }
+          saveAgentSeats(os);
+        } else {
+          // Buffer agents — they'll be added in layoutLoaded after seats are built
+          for (const id of incoming) {
+            const m = meta[id];
+            pendingAgents.push({
+              id,
+              palette: m?.palette,
+              hueShift: m?.hueShift,
+              seatId: m?.seatId,
+              folderName: folderNames[id],
+            });
+          }
         }
         setAgents((prev) => {
           const ids = new Set(prev);
