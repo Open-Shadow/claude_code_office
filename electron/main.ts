@@ -683,14 +683,15 @@ function setupIpcHandlers(): void {
     if (id === undefined || id === null) return;
     activeTerminals.add(id);
 
-    // If no active pty exists for this agent (persisted but not running), reconnect
+    // If no active pty exists for this agent (persisted but not running), start a fresh session
     if (!sessionManager.hasSession(id)) {
       const persisted = readPersistedAgents();
       const agent = persisted.find((a) => a.id === id);
       if (agent) {
-        const session = sessionManager.reconnectSession(id, agent.workDir, agent.sessionId);
+        // Start a brand new claude session (don't try to resume — the old pty is gone)
+        const session = sessionManager.reconnectSession(id, agent.workDir);
         if (!session) {
-          console.error('[Main] Failed to reconnect session for agent:', id);
+          console.error('[Main] Failed to create session for agent:', id);
         }
       }
     }

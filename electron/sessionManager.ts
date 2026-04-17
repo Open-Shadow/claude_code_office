@@ -233,12 +233,11 @@ export class SessionManager {
   }
 
   /**
-   * Reconnect a persisted agent by spawning a new pty with `claude --resume`.
-   * When originalSessionId is provided, uses `claude --resume <sessionId>` to resume the exact session.
-   * Without originalSessionId, uses `claude --resume` to resume the most recent session.
+   * Reconnect a persisted agent by spawning a new pty.
+   * Always creates a fresh `claude --session-id <uuid>` session.
    * Returns session info on success, null on failure.
    */
-  reconnectSession(id: number, workDir: string, originalSessionId?: string): SessionInfo | null {
+  reconnectSession(id: number, workDir: string, _originalSessionId?: string): SessionInfo | null {
     // If a session with this id already exists, just return its info
     if (this.sessions.has(id)) {
       const existing = this.sessions.get(id)!;
@@ -246,11 +245,11 @@ export class SessionManager {
     }
 
     const projectName = path.basename(workDir);
-    const sessionId = originalSessionId ?? crypto.randomUUID();
+    const sessionId = crypto.randomUUID();
 
-    const claudeArgs = originalSessionId
-      ? ['claude', '--resume', originalSessionId]
-      : ['claude', '--resume'];
+    // Always start a fresh session — resuming old sessions is unreliable
+    // (the old pty is gone, and claude --resume may fail if session expired)
+    const claudeArgs = ['claude', '--session-id', sessionId];
 
     const isWindows = process.platform === 'win32';
     const shell = isWindows ? 'cmd.exe' : (process.env.SHELL || '/bin/bash');
