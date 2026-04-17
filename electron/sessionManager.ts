@@ -219,9 +219,9 @@ export class SessionManager {
   }
 
   /**
-   * Reconnect a persisted agent by spawning a new pty with `claude --continue`.
-   * When originalSessionId is provided, uses `--continue --session-id` to resume the exact session.
-   * Without originalSessionId, uses `--resume` to resume the most recent session.
+   * Reconnect a persisted agent by spawning a new pty with `claude --resume`.
+   * When originalSessionId is provided, uses `claude --resume <sessionId>` to resume the exact session.
+   * Without originalSessionId, uses `claude --resume` to resume the most recent session.
    * Returns session info on success, null on failure.
    */
   reconnectSession(id: number, workDir: string, originalSessionId?: string): SessionInfo | null {
@@ -235,7 +235,7 @@ export class SessionManager {
     const sessionId = originalSessionId ?? crypto.randomUUID();
 
     const claudeArgs = originalSessionId
-      ? ['claude', '--continue', '--session-id', originalSessionId]
+      ? ['claude', '--resume', originalSessionId]
       : ['claude', '--resume'];
 
     const isWindows = process.platform === 'win32';
