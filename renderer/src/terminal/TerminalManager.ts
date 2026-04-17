@@ -131,6 +131,27 @@ export class TerminalManager {
       electronAPI?.send('pty-input', { agentId, data });
     });
 
+    // Ctrl+C copies when there is a selection, otherwise sends SIGINT
+    terminal.attachCustomKeyEventHandler((event) => {
+      if (event.ctrlKey && event.key === 'c' && event.type === 'keydown') {
+        if (terminal.hasSelection()) {
+          navigator.clipboard.writeText(terminal.getSelection());
+          terminal.clearSelection();
+          return false; // prevent sending to pty
+        }
+      }
+      // Ctrl+V paste
+      if (event.ctrlKey && event.key === 'v' && event.type === 'keydown') {
+        navigator.clipboard.readText().then((text) => {
+          if (text) {
+            electronAPI?.send('pty-input', { agentId, data: text });
+          }
+        }).catch(() => {});
+        return false;
+      }
+      return true;
+    });
+
     // Notify main process of resize
     terminal.onResize(({ cols, rows }) => {
       electronAPI?.send('resize-pty', { agentId, cols, rows });

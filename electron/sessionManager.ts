@@ -180,7 +180,11 @@ export class SessionManager {
   writeToPty(id: number, data: string): void {
     const entry = this.sessions.get(id);
     if (!entry) return;
-    entry.pty.write(data);
+    try {
+      entry.pty.write(data);
+    } catch {
+      // pty may have already exited (UV_HANDLE_CLOSING on Windows)
+    }
   }
 
   /**
@@ -189,7 +193,11 @@ export class SessionManager {
   resizePty(id: number, cols: number, rows: number): void {
     const entry = this.sessions.get(id);
     if (!entry) return;
-    entry.pty.resize(cols, rows);
+    try {
+      entry.pty.resize(cols, rows);
+    } catch {
+      // pty may have already exited (UV_HANDLE_CLOSING on Windows)
+    }
   }
 
   /**
